@@ -86,9 +86,8 @@ int Entity::get_neighbor_closeness(){
 }
 void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
 	if(has_disease){
-		float immune_sys_weakness = 1.0-immune_sys_strength;
 		sanity = disease.change_sanity(sanity, color);
-		disease.change_strength(immune_sys_strength);
+		disease.change_strength(strength);
 		if(disease.get_strength() < 0.1){
 			has_disease = false;
 		}
@@ -288,8 +287,8 @@ void Entity::reproduce(Entity* mate, vector<Entity*>* alist){
 			{"psysense", get_rep_trait(mate->psych_sensitivity, psych_sensitivity, mutprob)},
 			{"atol", get_rep_trait(mate->agetol, agetol, mutprob)},
 			{"mutprob", get_rep_trait(mate->mutation_prob, mutation_prob, mutprob)},
-			{"imstrength", get_rep_trait(mate->immune_sys_strength, immune_sys_strength, mutprob)},
 			{"fert", get_rep_trait(mate->fertility, fertility, mutprob)},
+			{"stren", get_rep_trait(mate->strength/2.0, strength/2.0, mutprob)*2.0},
 			{"x", get_rep_trait(mate->x, x, 0)},
 			{"y", get_rep_trait(mate->y, y, 0)}
 		};
@@ -374,8 +373,8 @@ Entity::Entity(vector<int> c, vector<int> favc, map<string, float>* opts, vector
 	choord_r->w = 15;
 	choord_r->h = 15;
 	mutation_prob = (*opts).at("mutprob");
-	immune_sys_strength = opts->at("imstrength");
 	fertility = opts->at("fert");
+	strength = opts->at("stren");
 	ents = e;
 	t = time;
 }

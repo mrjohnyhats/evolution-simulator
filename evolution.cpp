@@ -132,8 +132,8 @@ int main( int argc, char* args[] ){
 				{"psysense", float_rand()*0.95 + 0.05},
 				{"atol", float_rand()},
 				{"mutprob", float_rand()},
-				{"imstrength", float_rand()},
 				{"fert", float_rand()},
+				{"stren", float_rand()*2},
 				{"x", float_rand()*SCREEN_WIDTH},
 				{"y", float_rand()*SCREEN_HEIGHT}
 			};

@@ -19,7 +19,7 @@ Disease::Disease(map<string, float>* opts, vector<int> favc){
 Disease::Disease(){}
 void Disease::change_strength(float resistance){
 	if(strength < end_strength){
-		strength+=(strength_inc*resistance);
+		strength+=(strength_inc*(1.0-resistance));
 		if(strength < 0) strength = 0;
 	}
 }

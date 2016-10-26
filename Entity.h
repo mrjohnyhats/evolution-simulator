@@ -38,8 +38,8 @@ class Entity{
 	int targetc;
 	int repc;
 	float mutation_prob;
-	float immune_sys_strength;
 	float fertility;
+	float strength;
 	int t;
 	bool has_disease = false;
 	Disease disease;
