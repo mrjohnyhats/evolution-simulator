@@ -40,10 +40,11 @@ class Entity{
 	float mutation_prob;
 	float fertility;
 	float strength;
-	int t;
+	double t;
 	bool has_disease = false;
 	Disease disease;
 	int clostc = 0;
+	double food = 1.0;
 public:
 	bool die_if_old(vector<int>* klist);
 	int get_neighbor_closeness();
@@ -61,7 +62,7 @@ public:
 	void randmove(float req_factor = 0, float speed = 5.0);
 	void stop_fighting();
 	void update_ents_ptr(vector<Entity*>* e);
-	void update_time(int time);
+	void update_time(double time);
 	void add_disease(Disease d);
 	Entity(vector<int> c, vector<int> favc, map<string, float>* opts, vector<Entity*>* e, int selfi, int time);
 	~Entity();

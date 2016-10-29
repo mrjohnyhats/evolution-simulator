@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
-#include <SDL2_ttf/SDL_ttf.h>
+#include <SDL2/SDL_ttf.h>
+#include <stdio.h>
 
 #include "Pop_counter.h"
 #include "globals.h"
@@ -25,13 +26,13 @@ Pop_counter::~Pop_counter(){
 Pop_counter::Pop_counter(int startp){
 	if(!TTF_WasInit() && TTF_Init() == -1){
 		printf("error initializing ttf library: %s\n", TTF_GetError());
-		exit(2);
+	} else {
+		font = TTF_OpenFont("font.ttf", 40);
+		if(!font){
+			printf("error initializing font: %s\n", SDL_GetError());
+		}
+		pop = startp;
+		r->x = SCREEN_WIDTH/80;
+		r->y = SCREEN_HEIGHT/80;
 	}
-	font = TTF_OpenFont("font.ttf", 40);
-	if(!font){
-		printf("error initializing font: %s\n", SDL_GetError());
-	}
-	pop = startp;
-	r->x = SCREEN_WIDTH/80;
-	r->y = SCREEN_HEIGHT/80;
 }

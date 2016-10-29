@@ -5,7 +5,7 @@
 #include <map>
 #include <algorithm>
 #include <iostream>
-#include <cmath>
+#include <math.h>
 #include <stdio.h>
 
 #include "globals.h"
@@ -47,14 +47,29 @@ void Entity::move(tuple<int, int> inewc, float speed){
 	int change_type = float_rand() > 0.5;
 	if(change_type == 0) change_type = -1;
 
-	int newx = abs(get<0>(newc) - x) < fmod(get<0>(newc) + x, SCREEN_WIDTH) ? get<0>(newc) - x : fmod(get<0>(newc) + x, SCREEN_WIDTH);  
-	int newy = abs(get<1>(newc) - y) < fmod(get<1>(newc) + y, SCREEN_HEIGHT) ? get<1>(newc) - y : fmod(get<1>(newc) + y, SCREEN_HEIGHT);
-
 	moving = false;
 
-	double xinc = newx / (2000.0/speed + (1.0 - sanity)*(4.0*speed + float_rand()*(double)100)*change_type)*t;
-	double yinc = newy / (2000.0/speed + (1.0 - sanity)*(4.0*speed + float_rand()*(double)100)*change_type)*t;
+	int xdiff = (int)abs(x - get<0>(newc)); 
+	int oxdiff = (int)(x + get<0>(newc)) % SCREEN_WIDTH; 
+	int ydiff = (int)abs(y - get<1>(newc));
+	int oydiff = (int)(y + get<1>(newc)) % SCREEN_HEIGHT;
 
+	int xmul = xdiff*xdiff > oxdiff*oxdiff ? (get<0>(newc) - x)/abs(get<0>(newc) - x) : -1*(get<0>(newc) - x)/abs(get<0>(newc) - x);
+	int ymul = ydiff*ydiff > oydiff*oydiff ? (get<1>(newc) - y)/abs(get<1>(newc) - y) : -1*(get<1>(newc) - y)/abs(get<1>(newc) - y);
+
+	double xinc = (speed/10 + (1.0 - sanity)*(speed*float_rand())*change_type);
+	double yinc = xinc;
+	cout << speed/10 << endl;
+	cout << 1.0-sanity << endl;
+	cout << speed*float_rand() << endl;
+	// printf("%d, %d\n", xinc, yinc);
+	xinc *= 0.0000001*t;
+	yinc *= 0.0000001*t;
+	// printf("%d, %d\n", xinc, yinc);
+	xinc *= (double)xmul;
+	yinc *= (double)ymul;
+
+	// printf("%d, %d\n", xinc, yinc);
 
 	if(abs((int)get<0>(newc) - (int)x) > max(15.0, xinc)){
 		x += xinc;
@@ -85,6 +100,17 @@ int Entity::get_neighbor_closeness(){
 	return sqrt(mean_neigh_x*mean_neigh_x+mean_neigh_y*mean_neigh_y);
 }
 void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
+	food -= 0.0000001*t;
+	int mx, my;
+	SDL_GetMouseState(&mx, &my);
+	int mdist = distance_formula(make_tuple((int)x, (int)y), make_tuple(mx, my));
+	if(mdist < 30){
+		food = 1.0;
+		randmove((float)mdist/(float)DIAG_DIST, 6.0);
+	} else if(mdist/food > DIAG_DIST){
+		move(make_tuple(mx, my), 5.0);
+	}
+
 	if(has_disease){
 		sanity = disease.change_sanity(sanity, color);
 		disease.change_strength(strength);
@@ -93,7 +119,7 @@ void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
 		}
 	}
 
-	if(!reproducing && !is_mate && ((!reproduced && (positivity+float_rand())/2 >= (double)1.0-t/(6.0-age/1500)) || ents->size() < REP_CHOICE_START_POP)) {
+	if(!reproducing && !is_mate && food > 0.5 && ((!reproduced && (positivity+float_rand())/2 >= (double)1.0-t/(6.0-age/1500)) || ents->size() < REP_CHOICE_START_POP)) {
 		// cout << "pursuing reproduction" << endl;
 
 		pair<float, vector<Entity*>::iterator> easiest_e = make_pair(2.0, ents->begin()+self_entsi);
@@ -210,6 +236,9 @@ void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
 
 	if(round(sanity*10)/10 <= 0.75){
 		klist->push_back(self_entsi);
+	} else if(food <= 0){
+		printf("ent died of hunger\n");
+		klist->push_back(self_entsi);
 	}
 }
 void Entity::stop_reproducing(vector<Entity*>::iterator mate){
@@ -217,8 +246,10 @@ void Entity::stop_reproducing(vector<Entity*>::iterator mate){
 	stop_reproducing();
 }
 void Entity::randmove(float req_factor, float speed){
-	int rx = (float_rand()-req_factor)*SCREEN_WIDTH;
-	int ry = (float_rand()-req_factor)*SCREEN_HEIGHT;
+	double ra = M_PI*2*float_rand();
+	double rd = (float_rand() - req_factor)*DIAG_DIST + req_factor*DIAG_DIST;
+	int rx = (int)abs(x+cos(ra)*rd)%SCREEN_WIDTH;
+	int ry = (int)abs(y+cos(ra)*rd)%SCREEN_HEIGHT;
 	move(make_tuple(rx, ry), speed);
 }
 void Entity::stop_reproducing(){
@@ -240,7 +271,7 @@ void Entity::stop_fighting(){
 void Entity::update_ents_ptr(vector<Entity*>* e){
 	ents = e;
 }
-void Entity::update_time(int time){
+void Entity::update_time(double time){
 	t = time;
 }
 void Entity::reg_as_mate(){
@@ -343,6 +374,10 @@ void Entity::draw(SDL_Renderer* ren){
 
 	SDL_SetRenderDrawColor(ren, color.at(0), color.at(1), color.at(2), 255);
 	if(SDL_RenderFillRect(ren, choord_r) != 0){
+		printf("error drawing filled rect %s\n", SDL_GetError());
+	}
+	SDL_SetRenderDrawColor(ren, 255-color.at(0), 255-color.at(1), 255-color.at(2), 255);
+	if(SDL_RenderDrawRect(ren, choord_r) != 0){
 		printf("error drawing rect %s\n", SDL_GetError());
 	}
 

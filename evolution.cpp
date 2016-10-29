@@ -1,5 +1,5 @@
 #include <SDL2/SDL.h>
-#include <SDL2_ttf/SDL_ttf.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdio.h>
 #include <iostream>
 #include <string>
@@ -12,11 +12,13 @@
 #include <functional>
 #include <map>
 #include <algorithm>
+#include <chrono>
 
 #include "globals.h"
 #include "Entity.h"
 #include "Disease.h"
 #include "Pop_counter.h"
+
 using namespace std;
 
 //Starts up SDL and creates window
@@ -149,13 +151,13 @@ int main( int argc, char* args[] ){
 
 		SDL_Event e;
 
-		int t = 0;
-		int lastt;
+		double t = 0;
+		chrono::high_resolution_clock::time_point lastt;
 		int tick = 0;
 		int t_since_popc_update = 0;
 
 		while(!quit) {
-			lastt = SDL_GetTicks();
+			lastt = chrono::high_resolution_clock::now();
 			if(t_since_popc_update >= 100){
 				t_since_popc_update %= 100;
 				pcounter->update(ents->size());
@@ -177,6 +179,7 @@ int main( int argc, char* args[] ){
 			}
 			pcounter->draw(renderer);
 			tick++;
+			printf("population %d\n", ents->size());
 			a_on_alist();
 			k_on_klist();
 			// for(int c = 0; c < 6; c++){
@@ -197,7 +200,8 @@ int main( int argc, char* args[] ){
 				}
 			}
 
-			t = SDL_GetTicks() - lastt;
+			t = chrono::duration_cast<chrono::nanoseconds>(chrono::high_resolution_clock::now()-lastt).count();
+			printf("t %f\n", t);
 			t_since_popc_update+=t;
 			//SDL_Delay(FRAMETIME - t);
 		}
