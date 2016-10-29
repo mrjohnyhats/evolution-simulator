@@ -1,5 +1,9 @@
 #include <SDL2/SDL.h>
+#ifdef __WIN32__
 #include <SDL2/SDL_ttf.h>
+#else
+#include <SDl2_ttf/SDL_ttf.h>
+#endif
 #include <stdio.h>
 #include <iostream>
 #include <string>
@@ -158,8 +162,8 @@ int main( int argc, char* args[] ){
 
 		while(!quit) {
 			lastt = chrono::high_resolution_clock::now();
-			if(t_since_popc_update >= 100){
-				t_since_popc_update %= 100;
+			if(t_since_popc_update >= 10){
+				t_since_popc_update %= 10;
 				pcounter->update(ents->size());
 			}
 			Entity* ent;
@@ -179,7 +183,6 @@ int main( int argc, char* args[] ){
 			}
 			pcounter->draw(renderer);
 			tick++;
-			printf("population %d\n", ents->size());
 			a_on_alist();
 			k_on_klist();
 			// for(int c = 0; c < 6; c++){
@@ -200,8 +203,8 @@ int main( int argc, char* args[] ){
 				}
 			}
 
-			t = chrono::duration_cast<chrono::nanoseconds>(chrono::high_resolution_clock::now()-lastt).count();
-			printf("t %f\n", t);
+
+			t = 1e-7*chrono::duration_cast<chrono::nanoseconds>(chrono::high_resolution_clock::now()-lastt).count();
 			t_since_popc_update+=t;
 			//SDL_Delay(FRAMETIME - t);
 		}

@@ -50,33 +50,21 @@ void Entity::move(tuple<int, int> inewc, float speed){
 	moving = false;
 
 	int xdiff = (int)abs(x - get<0>(newc)); 
-	int oxdiff = (int)(x + get<0>(newc)) % SCREEN_WIDTH; 
+	int oxdiff = (int)(SCREEN_WIDTH - x + get<0>(newc)); 
 	int ydiff = (int)abs(y - get<1>(newc));
-	int oydiff = (int)(y + get<1>(newc)) % SCREEN_HEIGHT;
+	int oydiff = (int)(SCREEN_HEIGHT - y + get<1>(newc));
 
-	int xmul = xdiff*xdiff > oxdiff*oxdiff ? (get<0>(newc) - x)/abs(get<0>(newc) - x) : -1*(get<0>(newc) - x)/abs(get<0>(newc) - x);
-	int ymul = ydiff*ydiff > oydiff*oydiff ? (get<1>(newc) - y)/abs(get<1>(newc) - y) : -1*(get<1>(newc) - y)/abs(get<1>(newc) - y);
+	int xmul = xdiff*xdiff < oxdiff*oxdiff ? (get<0>(newc) - x)/abs(get<0>(newc) - x) : -1*(get<0>(newc) - x)/abs(get<0>(newc) - x);
+	int ymul = ydiff*ydiff < oydiff*oydiff ? (get<1>(newc) - y)/abs(get<1>(newc) - y) : -1*(get<1>(newc) - y)/abs(get<1>(newc) - y);
 
-	double xinc = (speed/10 + (1.0 - sanity)*(speed*float_rand())*change_type);
-	double yinc = xinc;
-	cout << speed/10 << endl;
-	cout << 1.0-sanity << endl;
-	cout << speed*float_rand() << endl;
-	// printf("%d, %d\n", xinc, yinc);
-	xinc *= 0.0000001*t;
-	yinc *= 0.0000001*t;
-	// printf("%d, %d\n", xinc, yinc);
-	xinc *= (double)xmul;
-	yinc *= (double)ymul;
+	double inc = (speed + (1.0 - sanity)*(speed*float_rand())*change_type)*t;
 
-	// printf("%d, %d\n", xinc, yinc);
-
-	if(abs((int)get<0>(newc) - (int)x) > max(15.0, xinc)){
-		x += xinc;
+	if(abs((int)get<0>(newc) - (int)x) > max(15.0, inc*xmul)){
+		x += inc*xmul;
 		moving = true;
 	}
-	if(abs((int)get<1>(newc) - (int)y) > max(15.0, yinc)) {
-		y += yinc;
+	if(abs((int)get<1>(newc) - (int)y) > max(15.0, inc*ymul)) {
+		y += inc*ymul;
 		moving = true;
 	}
 }
@@ -100,17 +88,10 @@ int Entity::get_neighbor_closeness(){
 	return sqrt(mean_neigh_x*mean_neigh_x+mean_neigh_y*mean_neigh_y);
 }
 void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
-	food -= 0.0000001*t;
+	food -= 1e-2*t;
 	int mx, my;
 	SDL_GetMouseState(&mx, &my);
 	int mdist = distance_formula(make_tuple((int)x, (int)y), make_tuple(mx, my));
-	if(mdist < 30){
-		food = 1.0;
-		randmove((float)mdist/(float)DIAG_DIST, 6.0);
-	} else if(mdist/food > DIAG_DIST){
-		move(make_tuple(mx, my), 5.0);
-	}
-
 	if(has_disease){
 		sanity = disease.change_sanity(sanity, color);
 		disease.change_strength(strength);
@@ -119,8 +100,16 @@ void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
 		}
 	}
 
-	if(!reproducing && !is_mate && food > 0.5 && ((!reproduced && (positivity+float_rand())/2 >= (double)1.0-t/(6.0-age/1500)) || ents->size() < REP_CHOICE_START_POP)) {
-		// cout << "pursuing reproduction" << endl;
+	if(mdist < 30){
+		food = 1.0;
+		randmove(0.25, 6.0);
+		cout << id << " got food" << endl;
+	} else if(mdist < DIAG_DIST/4 && food < 0.25){
+		cout << id << " getting food" << endl;
+		move(make_tuple(mx, my), 8.0);
+	}
+	else if(!reproducing && !is_mate && food > 0.5 && ((!reproduced && (positivity+float_rand())/2 >= (double)1.0-t/(6.0-age/1500)) || ents->size() < REP_CHOICE_START_POP)) {
+		//cout << "pursuing reproduction" << endl;
 
 		pair<float, vector<Entity*>::iterator> easiest_e = make_pair(2.0, ents->begin()+self_entsi);
 
@@ -146,7 +135,7 @@ void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
 	}
 
 	if(!moving && get_neighbor_closeness() < 18){
-		// cout << "moving because clostrophobic" << endl;
+		cout << "moving because clostrophobic" << endl;
 		clostc++;
 		randmove(0.5, 8);
 	}
@@ -167,7 +156,7 @@ void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
 					repc = 0;
 				} else {
 					if(move_speed != 8.0) move_speed = 8.0;
-					// cout << "moving towards reproduction" << endl;
+					cout << "moving towards reproduction" << endl;
 					move(make_tuple((*mate)->x, (*mate)->y), move_speed);
 				}
 			} else {
@@ -210,7 +199,7 @@ void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
 					(*target)->defect(t);
 					(*target)->sanity -= ((*target)->sanity - (*target)->sanity * (*target)->agetol) * (*target)->psych_sensitivity;
 				} else {
-					// cout << "going to target" << endl;
+					cout << "going to target" << endl;
 					if(move_speed != 6.0) move_speed = 6.0;
 					move(make_tuple((*target)->x, (*target)->y), move_speed);
 				}

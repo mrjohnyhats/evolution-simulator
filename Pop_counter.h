@@ -1,7 +1,11 @@
 #ifndef PCDEFINED
 #define PCDEFINED
 #include <SDL2/SDL.h>
+#ifdef __WIN32__
 #include <SDL2/SDL_ttf.h>
+#else
+#include <SDl2_ttf/SDL_ttf.h>
+#endif
 #include <iostream>
 
 using namespace std;
