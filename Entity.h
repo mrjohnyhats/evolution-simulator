@@ -43,7 +43,6 @@ class Entity{
 	double t;
 	bool has_disease = false;
 	Disease disease;
-	int clostc = 0;
 	double food = 1.0;
 public:
 	bool die_if_old(vector<int>* klist);

@@ -12,7 +12,7 @@ template <typename T>
 string to_string(T value);
 int get_color_dist(vector<int> c1, vector<int> c2);
 template <typename T>
-int distance_formula(tuple<T, T> p1, tuple<T, T> p2);
+long distance_formula(tuple<T, T> p1, tuple<T, T> p2);
 int gen_rand();
 double float_rand();
 string rand_str(int len);

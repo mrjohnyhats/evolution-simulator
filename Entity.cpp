@@ -7,6 +7,8 @@
 #include <iostream>
 #include <math.h>
 #include <stdio.h>
+#include <iterator>
+#include <gmp.h>
 
 #include "globals.h"
 #include "Entity.h"
@@ -42,7 +44,11 @@ void Entity::move(tuple<int, int> inewc, float speed){
 	newc = inewc;
 	move_speed = speed;
 
-	// cout << "speed " << speed << endl;
+	cout << "speed " << speed << endl;
+
+	if(round(food*10)/10 == 0.2){
+		speed *= food*4;
+	}
 
 	int change_type = float_rand() > 0.5;
 	if(change_type == 0) change_type = -1;
@@ -69,26 +75,25 @@ void Entity::move(tuple<int, int> inewc, float speed){
 	}
 }
 int Entity::get_neighbor_closeness(){
-	vector<int> neigh_x_sum;
-	vector<int> neigh_y_sum;
-	for(auto e : *ents){
-		if(distance_formula(make_tuple(x, y), make_tuple(e->x, e->y)) < 45){
-			neigh_x_sum.push_back(e->x);
-			neigh_y_sum.push_back(e->y);
+	int distq = 0;
+	unsigned long dists = 0;
+
+	int dist;
+	for(auto e = ents->begin(); e != ents->end(); e++){
+		dist = distance_formula(make_tuple(x, y), make_tuple((*e)->x, (*e)->y));
+ 		if(distance(ents->begin(), e) != matei && dist < 45){
+			distq++;
+			dists += dist;
 		}
 	}
 
-	float mean_neigh_x;
-	float mean_neigh_y;
-	for(int i = 0; i < min(neigh_x_sum.size(), neigh_y_sum.size()); i++){
-		mean_neigh_x += neigh_x_sum.at(i);
-		mean_neigh_y += neigh_y_sum.at(i);
+	if(distq > 0){
+		return round(dists/distq);
 	}
-
-	return sqrt(mean_neigh_x*mean_neigh_x+mean_neigh_y*mean_neigh_y);
+	return DIAG_DIST;
 }
 void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
-	food -= 1e-2*t;
+	food -= 1e-2*t/2;
 	int mx, my;
 	SDL_GetMouseState(&mx, &my);
 	int mdist = distance_formula(make_tuple((int)x, (int)y), make_tuple(mx, my));
@@ -104,11 +109,16 @@ void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
 		food = 1.0;
 		randmove(0.25, 6.0);
 		cout << id << " got food" << endl;
-	} else if(mdist < DIAG_DIST/4 && food < 0.25){
-		cout << id << " getting food" << endl;
-		move(make_tuple(mx, my), 8.0);
 	}
-	else if(!reproducing && !is_mate && food > 0.5 && ((!reproduced && (positivity+float_rand())/2 >= (double)1.0-t/(6.0-age/1500)) || ents->size() < REP_CHOICE_START_POP)) {
+
+	float open_space_level = get_neighbor_closeness();
+
+ 	if(mdist < DIAG_DIST/4 && food < 0.3){
+		cout << id << " getting food, food " << food << endl;
+		move(make_tuple(mx, my), 10.0*(1.0-food));
+	} else if(!moving && open_space_level > 0 && open_space_level < 18){
+		randmove(0.5, 20-open_space_level/2);
+	} else if(!reproducing && !is_mate && food > 0.3 && ((!reproduced && (positivity+float_rand())/2 >= (double)1.0-t/(6.0-age/1500)) || ents->size() < REP_CHOICE_START_POP)) {
 		//cout << "pursuing reproduction" << endl;
 
 		pair<float, vector<Entity*>::iterator> easiest_e = make_pair(2.0, ents->begin()+self_entsi);
@@ -132,14 +142,7 @@ void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
 				//cout << id << " started reproduction" << endl;
 			}
 		}
-	}
-
-	if(!moving && get_neighbor_closeness() < 18){
-		cout << "moving because clostrophobic" << endl;
-		clostc++;
-		randmove(0.5, 8);
-	}
-	else if(reproducing){
+	} else if(reproducing){
 		if(find(klist->begin(), klist->end(), matei) == klist->end() && matei < ents->size()){
 			vector<Entity*>::iterator mate = ents->begin() + matei;
 			int color_dist = get_color_dist((*mate)->fav_color, color);
@@ -156,7 +159,7 @@ void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
 					repc = 0;
 				} else {
 					if(move_speed != 8.0) move_speed = 8.0;
-					cout << "moving towards reproduction" << endl;
+					// cout << "moving towards reproduction" << endl;
 					move(make_tuple((*mate)->x, (*mate)->y), move_speed);
 				}
 			} else {
@@ -199,7 +202,7 @@ void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
 					(*target)->defect(t);
 					(*target)->sanity -= ((*target)->sanity - (*target)->sanity * (*target)->agetol) * (*target)->psych_sensitivity;
 				} else {
-					cout << "going to target" << endl;
+					// cout << "going to target" << endl;
 					if(move_speed != 6.0) move_speed = 6.0;
 					move(make_tuple((*target)->x, (*target)->y), move_speed);
 				}
@@ -346,6 +349,8 @@ void Entity::reproduce(Entity* mate, vector<Entity*>* alist){
 	mate->reg_as_not_mate();
 }
 void Entity::draw(SDL_Renderer* ren){
+	// cout << "x " << x << endl;
+	// cout << "y " << y << endl;
 	if(x > SCREEN_WIDTH){
 		x = fmod(x, SCREEN_WIDTH);
 	} else if(x < 0){

@@ -124,33 +124,39 @@ void a_on_alist(){
 	}
 }
 
+vector<Entity*>* make_ents(){
+	vector<Entity*>* ents = new vector<Entity*>;
+	for(int i = 0; i < REP_CHOICE_START_POP; i++){
+		map<string, float> opts {
+			{"pos", float_rand()},
+			{"pick", float_rand()},
+			{"hostl", float_rand()},
+			{"psysense", float_rand()*0.95 + 0.05},
+			{"atol", float_rand()},
+			{"mutprob", float_rand()},
+			{"fert", float_rand()},
+			{"stren", float_rand()*2},
+			{"x", float_rand()*SCREEN_WIDTH},
+			{"y", float_rand()*SCREEN_HEIGHT}
+		};
+		vector<int> color {(int)(float_rand()*255), (int)(float_rand()*255), (int)(float_rand()*255)};
+		vector<int> favc = {(int)(float_rand()*255), (int)(float_rand()*255), (int)(float_rand()*255)};
+
+		ents->push_back(new Entity(color, favc, &opts, ents, ents->size(), 0));
+		if(float_rand() < 0.1){
+			(*(ents->end()-1))->add_disease(make_disease());
+		}
+	}
+	return ents;
+}
+
 int main( int argc, char* args[] ){
 	if( !init() ){
 		cout << "Failed to initialize!\n";
 		close();
 	}
 	else{
-		for(int i = 0; i < REP_CHOICE_START_POP; i++){
-			map<string, float> opts {
-				{"pos", float_rand()},
-				{"pick", float_rand()},
-				{"hostl", float_rand()},
-				{"psysense", float_rand()*0.95 + 0.05},
-				{"atol", float_rand()},
-				{"mutprob", float_rand()},
-				{"fert", float_rand()},
-				{"stren", float_rand()*2},
-				{"x", float_rand()*SCREEN_WIDTH},
-				{"y", float_rand()*SCREEN_HEIGHT}
-			};
-			vector<int> color {(int)(float_rand()*255), (int)(float_rand()*255), (int)(float_rand()*255)};
-			vector<int> favc = {(int)(float_rand()*255), (int)(float_rand()*255), (int)(float_rand()*255)};
-
-			ents->push_back(new Entity(color, favc, &opts, ents, ents->size(), 0));
-			if(float_rand() < 0.2){
-				(*(ents->end()-1))->add_disease(make_disease());
-			}
-		}
+		ents = make_ents();
 		bool quit = false;
 
 		SDL_Event e;

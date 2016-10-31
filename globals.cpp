@@ -34,7 +34,7 @@ int get_color_dist(vector<int> c1, vector<int> c2){
 }
 
 template <typename T>
-int distance_formula(tuple<T, T> p1, tuple<T, T> p2){
+long distance_formula(tuple<T, T> p1, tuple<T, T> p2){
 	long dists[4];
 	int x = abs(get<0>(p1) - get<0>(p2));
 	int ox = SCREEN_WIDTH-get<0>(p1) + get<0>(p2);
@@ -53,10 +53,10 @@ int distance_formula(tuple<T, T> p1, tuple<T, T> p2){
 			dist = 0;
 		}
 	}
-	return (int)sqrt(*(min_element(dists, dists+4)));
+	return (long)sqrt(*(min_element(dists, dists+4)));
 }
-template int distance_formula<int>(tuple<int, int> p1, tuple<int, int> p2);
-template int distance_formula<float>(tuple<float, float> p1, tuple<float, float> p2);
+template long distance_formula<int>(tuple<int, int> p1, tuple<int, int> p2);
+template long distance_formula<float>(tuple<float, float> p1, tuple<float, float> p2);
 
 int gen_rand(){
 	if(!r_seeded){
