@@ -13,11 +13,13 @@ class Disease {
 	float pickiness;
 	float mobility;
 	float strength;
+	float food_effect;
 public:
 	void change_strength(float resistance);
 	float get_strength();
 	float get_mobility();
-	float change_sanity(float sanity, vector<int> color);
+	float get_sanitydiff(float sanity, vector<int> color, int t);
+	float get_food_effect();
 	Disease(map<string, float>* opts, vector<int> favc);
 	Disease();
 };

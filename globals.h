@@ -19,12 +19,15 @@ string rand_str(int len);
 float get_rep_trait(float t1, float t2, float mutprob);
 vector<int> invert_color(vector<int> c);
 Disease make_disease();
+Disease make_disease(float strength);
 
 const int SCREEN_WIDTH = 1600;
 const int SCREEN_HEIGHT = 900;
-const int DIAG_DIST = SCREEN_WIDTH*SCREEN_WIDTH+SCREEN_HEIGHT*SCREEN_HEIGHT;
+const int DIAG_DIST = sqrt(SCREEN_WIDTH*SCREEN_WIDTH+SCREEN_HEIGHT*SCREEN_HEIGHT);
 const int FRAMECAP = 60;
 const double FRAMETIME = 1000/(double)(FRAMECAP);
 const int REP_CHOICE_START_POP = 6;
 const int MAX_COLOR_DIST = sqrt(255*255*3);
+const unsigned long long MIN_CLOSTC_FOR_DISEASE = 1e11;
+extern float mouse_food;
 #endif

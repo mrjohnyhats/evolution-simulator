@@ -22,6 +22,7 @@
 #include "Entity.h"
 #include "Disease.h"
 #include "Pop_counter.h"
+// extern float mouse_food;
 
 using namespace std;
 
@@ -114,6 +115,7 @@ void k_on_klist(){
 			klist->erase(klisti);
 		}
 	}
+	delete ents;
 	ents = nents;
 }
 
@@ -164,14 +166,10 @@ int main( int argc, char* args[] ){
 		double t = 0;
 		chrono::high_resolution_clock::time_point lastt;
 		int tick = 0;
-		int t_since_popc_update = 0;
 
 		while(!quit) {
 			lastt = chrono::high_resolution_clock::now();
-			if(t_since_popc_update >= 10){
-				t_since_popc_update %= 10;
 				pcounter->update(ents->size());
-			}
 			Entity* ent;
 			int i = 0;
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -180,17 +178,23 @@ int main( int argc, char* args[] ){
 				ent = ents->at(i);
 				ent->update_ents_ptr(ents);
 				ent->update_time(t);
-				ent->update_indices(i);
 				ent->behave(klist, alist);
 				ent->inc_age();
 				ent->die_if_old(klist);
 				ent->draw(renderer);
+				if(mouse_food < 10){
+					mouse_food += 0.01;
+				}
 				i++;
 			}
 			pcounter->draw(renderer);
 			tick++;
+			for(auto entity : *ents){
+				entity->update_indices(klist);
+			}
 			a_on_alist();
 			k_on_klist();
+			// cout << "mouse_food " << mouse_food << endl;
 			// for(int c = 0; c < 6; c++){
 			// 	cout << c << " " << MPC[c] << endl;
 			// }
@@ -211,7 +215,6 @@ int main( int argc, char* args[] ){
 
 
 			t = 1e-7*chrono::duration_cast<chrono::nanoseconds>(chrono::high_resolution_clock::now()-lastt).count();
-			t_since_popc_update+=t;
 			//SDL_Delay(FRAMETIME - t);
 		}
 	}

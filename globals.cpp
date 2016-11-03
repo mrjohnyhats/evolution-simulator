@@ -12,9 +12,11 @@
 
 #include "Disease.h"
 #include "globals.h"
+
 using namespace std;
 
 bool r_seeded = false;
+extern float mouse_food = 10.0;
 
 template <typename T>
 string to_string(T value){
@@ -99,12 +101,34 @@ vector<int> invert_color(vector<int> c){
 }
 
 Disease make_disease(){
+	float startstren = float_rand()/2;
 	map<string, float> opts = {
-		{"startstren", float_rand()/2},
-		{"endstren", 1/2 + float_rand()/2},
+		{"startstren", startstren},
+		{"endstren", startstren + float_rand()*(1-startstren)},
 		{"streninc", float_rand()/10},
 		{"pick", float_rand()},
-		{"mobility", float_rand()}
+		{"mobility", float_rand()},
+		{"foodeff", float_rand()}
+	};
+	vector<int> favc;
+	for(int i = 0; i < 3; i++){
+		favc.push_back(float_rand()*255);
+	}
+	return Disease(&opts, favc);
+}
+
+Disease make_disease(float strength){
+	if(strength > 1){
+		strength = 1;
+	}
+	float basestren = strength + float_rand()*(1-strength)/2;
+	 map<string, float> opts = {
+		{"startstren", basestren/2},
+		{"endstren", basestren/2 + float_rand()*(1-basestren/2)},
+		{"streninc", basestren/10},
+		{"pick", float_rand()},
+		{"mobility", float_rand()},
+		{"foodeff", float_rand()}
 	};
 	vector<int> favc;
 	for(int i = 0; i < 3; i++){

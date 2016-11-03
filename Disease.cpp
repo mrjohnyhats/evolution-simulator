@@ -13,6 +13,7 @@ Disease::Disease(map<string, float>* opts, vector<int> favc){
 	strength_inc = opts->at("streninc");
 	mobility = opts->at("mobility");
 	pickiness = opts->at("pick");
+	food_effect = opts->at("foodeff");
 	fav_color = favc;
 	strength = start_strength;
 }
@@ -23,18 +24,19 @@ void Disease::change_strength(float resistance){
 		if(strength < 0) strength = 0;
 	}
 }
-float Disease::change_sanity(float sanity, vector<int> color){
+float Disease::get_sanitydiff(float sanity, vector<int> color, int t){
 	float color_dist_factor = get_color_dist(color, fav_color)/(float)MAX_COLOR_DIST;
 	float color_effect = color_dist_factor*pickiness;
-	float modifier = sanity*strength*(1.0-color_dist_factor)*5.0 - color_effect;
-	if(modifier < 0) modifier = 0;
-	float retval = sanity - modifier;
-	if(retval < 0) retval = 0;
-	return retval;
+	float diff = (t*strength*(1.0-color_dist_factor) - color_effect)/10;
+	if(diff < 0) diff = 0;	
+	return diff;
 }
 float Disease::get_strength(){
 	return strength;
 }
 float Disease::get_mobility(){
 	return mobility;
+}
+float Disease::get_food_effect(){
+	return food_effect;
 }
