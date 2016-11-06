@@ -29,14 +29,12 @@ class Entity{
 	float move_speed = 0;
 	bool reproducing = false;
 	bool is_mate = false;
-	bool reproduced = false;
 	int matei;
 	int targeti;
 	string id;
 	SDL_Rect* choord_r = new SDL_Rect;
 	int self_entsi;
 	int targetc;
-	int repc;
 	float mutation_prob;
 	float fertility;
 	float strength;
@@ -52,7 +50,7 @@ public:
 	void defect(int i);
 	void move(tuple<int, int> inewc, float speed);
 	void behave(vector<int>* klist, vector<Entity*>* alist);
-	void reg_as_mate();
+	void reg_as_mate(int i);
 	void reg_as_not_mate();
 	void inc_age();
 	void reproduce(Entity* mate, vector<Entity*>* alist);
@@ -64,7 +62,7 @@ public:
 	void update_ents_ptr(vector<Entity*>* e);
 	void update_time(double time);
 	void add_disease(Disease d);
+	void kill();
 	Entity(vector<int> c, vector<int> favc, map<string, float>* opts, vector<Entity*>* e, int selfi, int time);
-	~Entity();
 };
 #endif

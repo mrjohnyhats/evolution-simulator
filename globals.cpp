@@ -16,7 +16,8 @@
 using namespace std;
 
 bool r_seeded = false;
-extern float mouse_food = 10.0;
+float mouse_food = 10.0;
+map<string, int> things_done;
 
 template <typename T>
 string to_string(T value){

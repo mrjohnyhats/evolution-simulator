@@ -1,8 +1,8 @@
 #include <SDL2/SDL.h>
-#ifdef __WIN32__
-#include <SDL2/SDL_ttf.h>
+#ifdef __OSX__
+#include <SDL2_ttf/SDL_ttf.h>
 #else
-#include <SDl2_ttf/SDL_ttf.h>
+#include <SDL2/SDL_ttf.h>
 #endif
 #include <stdio.h>
 #include <iostream>
@@ -107,16 +107,21 @@ void k_on_klist(){
 	vector<Entity*>* nents = new vector<Entity*>;
 	vector<int>::iterator klisti;
 	int idist = 0;
+	cout << "klist size " << klist->size() << endl;
+	cout << "ents before size " << ents->size() << endl;
 	for(auto i = ents->begin(); i != ents->end(); i++, idist++){
 		klisti = find(klist->begin(), klist->end(), idist);
 		if(klisti == klist->end()){
 			nents->push_back(*i);
 		} else {
 			klist->erase(klisti);
+			delete (ents->at(idist));
 		}
 	}
-	delete ents;
+
 	ents = nents;
+
+	cout << "ents after size " << ents->size() << endl;
 }
 
 void a_on_alist(){
@@ -128,7 +133,7 @@ void a_on_alist(){
 
 vector<Entity*>* make_ents(){
 	vector<Entity*>* ents = new vector<Entity*>;
-	for(int i = 0; i < REP_CHOICE_START_POP; i++){
+	for(int i = 0; i < 2; i++){
 		map<string, float> opts {
 			{"pos", float_rand()},
 			{"pick", float_rand()},
@@ -152,6 +157,25 @@ vector<Entity*>* make_ents(){
 	return ents;
 }
 
+void reset_things_done(){
+	things_done["getting_food"] = 0;
+	things_done["moving_to_r"] = 0;
+	things_done["reproducing"] = 0;
+	things_done["chose_mate"] = 0;
+	things_done["no_mate_found"] = 0;
+	things_done["abandoned_r"] = 0;
+	things_done["moving_to_t"] = 0;
+	things_done["fighting"] = 0;
+	things_done["chose_t"] = 0;
+	things_done["no_t_found"] = 0;
+	things_done["abandoned_t"] = 0;
+	things_done["food_dead"] = 0;
+	things_done["sanity_dead"] = 0;
+	things_done["moving"] = 0;
+	things_done["new_randmove"] = 0;
+	things_done["clost"] = 0;
+}
+
 int main( int argc, char* args[] ){
 	if( !init() ){
 		cout << "Failed to initialize!\n";
@@ -159,6 +183,7 @@ int main( int argc, char* args[] ){
 	}
 	else{
 		ents = make_ents();
+		reset_things_done();
 		bool quit = false;
 
 		SDL_Event e;
@@ -182,7 +207,7 @@ int main( int argc, char* args[] ){
 				ent->inc_age();
 				ent->die_if_old(klist);
 				ent->draw(renderer);
-				if(mouse_food < 10){
+				if(mouse_food < 50){
 					mouse_food += 0.01;
 				}
 				i++;
@@ -192,6 +217,10 @@ int main( int argc, char* args[] ){
 			for(auto entity : *ents){
 				entity->update_indices(klist);
 			}
+			for(auto a = things_done.begin(); a != things_done.end(); a++){
+				cout << a->first << ": " << a->second << endl;
+			}
+			reset_things_done();
 			a_on_alist();
 			k_on_klist();
 			// cout << "mouse_food " << mouse_food << endl;

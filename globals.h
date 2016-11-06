@@ -30,4 +30,5 @@ const int REP_CHOICE_START_POP = 6;
 const int MAX_COLOR_DIST = sqrt(255*255*3);
 const unsigned long long MIN_CLOSTC_FOR_DISEASE = 1e11;
 extern float mouse_food;
+extern map<string, int> things_done;
 #endif

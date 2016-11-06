@@ -1,8 +1,8 @@
 #include <SDL2/SDL.h>
-#ifdef __WIN32__
-#include <SDL2/SDL_ttf.h>
+#ifdef __OSX__
+#include <SDL2_ttf/SDL_ttf.h>
 #else
-#include <SDl2_ttf/SDL_ttf.h>
+#include <SDL2/SDL_ttf.h>
 #endif
 #include <stdio.h>
 

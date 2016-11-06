@@ -47,11 +47,11 @@ void Entity::move(tuple<int, int> inewc, float speed){
 
 	// cout << "speed " << speed << endl;
 
-	if(food > 0.4){
-		speed *= 4*food;
-	}
+	// if(food > 0.4){
+	// 	speed *= 4*food;
+	// }
 
-	food -= e-2*t*(speed/10)
+	food -= 1e-3*t*(speed/2.0);
 
 	int change_type = (float_rand() > 0.5);
 
@@ -67,7 +67,7 @@ void Entity::move(tuple<int, int> inewc, float speed){
 	int xmul = xdiff*xdiff < oxdiff*oxdiff ? (get<0>(newc) - x)/abs(get<0>(newc) - x) : -1*(get<0>(newc) - x)/abs(get<0>(newc) - x);
 	int ymul = ydiff*ydiff < oydiff*oydiff ? (get<1>(newc) - y)/abs(get<1>(newc) - y) : -1*(get<1>(newc) - y)/abs(get<1>(newc) - y);
 
-	double inc = (speed + (1.0 - sanity)*(speed*float_rand())*change_type)*t;
+	double inc = (speed/2.0 + (1.0 - sanity)*(speed/2.0*float_rand())*change_type)*t;
 
 	if(abs((int)get<0>(newc) - (int)x) > max(15.0, inc*xmul)){
 		x += inc*xmul;
@@ -101,17 +101,21 @@ void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
 	int mx, my;
 	SDL_GetMouseState(&mx, &my);
 	int mdist = distance_formula(make_tuple((int)x, (int)y), make_tuple(mx, my));
+
 	if(has_disease){
 		float sanitydiff = disease.get_sanitydiff(sanity, color, t);
+		float fooddiff = sanitydiff*disease.get_food_effect()/10.0;
 		sanity -= sanitydiff;
-		cout << "sanitydiff " << sanitydiff << endl;
-		if(food > 0) food -= sanitydiff*disease.get_food_effect()/10;
-		cout << "fooddiff " << sanitydiff*disease.get_food_effect()/10 << endl;
+		if(food > 0) food -= fooddiff;
 		if (food < 0) food = 0;
 		disease.change_strength(strength);
 		if(disease.get_strength() < 0.1){
 			has_disease = false;
 		}
+	}
+
+	if(food < 0.2){
+		sanity -= 1e-2*0.2-food;
 	}
 
 	if(mdist < 30){
@@ -134,76 +138,75 @@ void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
 
 	if(clostc > 0 && clostc < 18)clostc += (int)(2-open_space_level/10);
 
-	if(food > 0.3 || sanity < 0.3){
+	if(food > 0.3 || sanity < 0.3 || ents->size() < REP_CHOICE_START_POP){
 		if(reproducing){
 			if(find(klist->begin(), klist->end(), matei) == klist->end() && matei < ents->size()){
 				vector<Entity*>::iterator mate = ents->begin() + matei;
 				int color_dist = get_color_dist((*mate)->fav_color, color);
-
-				if(repc < 2500){
-					repc+=t;
-					if(distance_formula(make_tuple((int)(*mate)->x, (int)(*mate)->y), make_tuple((int)x, (int)y)) <= 30){
-						cout << id << " finished reproducing" << endl;
-						reproduce(ents->at(matei), alist);
-						reproduced = true;
-						stop_reproducing();
-					} else {
-						if(move_speed != 8.0) move_speed = 8.0;
-						// cout << "moving towards reproduction" << endl;
-						move(make_tuple((*mate)->x, (*mate)->y), move_speed);
-					}
-				} else {
+				if(distance_formula(make_tuple((int)(*mate)->x, (int)(*mate)->y), make_tuple((int)x, (int)y)) <= 30){
+					// cout << id << " finished reproducing" << endl;
+					things_done["reproducing"]++;
+					reproduce(ents->at(matei), alist);
 					stop_reproducing();
+				} else {
+					if(move_speed != 8.0) move_speed = 8.0;
+					// cout << "moving towards reproduction" << endl;
+					things_done["moving_to_r"]++;
+					move(make_tuple((*mate)->x, (*mate)->y), move_speed);
 				}
 			} else {
 				stop_reproducing();
 			}
-		} else if(open_space_level > 0 && open_space_level < 18){
-			randmove(0.5, 20-open_space_level/2);
-		} else if(!reproducing && !is_mate && ((!reproduced && (positivity+float_rand())/2 <= t/(2.0-age/4000)) || ents->size() < REP_CHOICE_START_POP)) {
-			cout << "pursuing reproduction" << endl;
+		} else if(!is_mate && t*((positivity+float_rand())/2 >= ((float_rand() + 1.0 - age/12000)/2) || ents->size()-klist->size() < REP_CHOICE_START_POP)) {
+			// cout << "pursuing reproduction" << endl;
 
 			pair<float, vector<Entity*>::iterator> easiest_e = make_pair(2.0, ents->begin()+self_entsi);
 
-			if(matei == self_entsi){
-				int color_dist;
-				for(auto e = ents->begin(); e != ents->end(); e++){
-					int color_dist = get_color_dist((*e)->color, color);
-					float color_closeness = 1.0-color_dist/255.0;
-					float map_closeness = 1.0-distance_formula(make_tuple((*e)->x, (*e)->y), make_tuple(x, y))/(float)DIAG_DIST;
-					float effort = (float)((map_closeness+color_closeness)/4.0);
-					if(((color_dist <= fav_color_tol*255 && effort < easiest_e.first) || matei < REP_CHOICE_START_POP) && distance(ents->begin(), e) != self_entsi){
-						easiest_e = make_pair(effort, e);
-					}
-				}
-				if(distance(ents->begin(), easiest_e.second) != self_entsi){
-					// cout << id << " found mate" << endl;
-					matei = distance(ents->begin(), easiest_e.second);
-					reproducing = true;
-					(*easiest_e.second)->reg_as_mate();
-					//cout << id << " started reproduction" << endl;
+			int color_dist;
+			for(auto e = ents->begin(); e != ents->end(); e++){
+				int color_dist = get_color_dist((*e)->color, color);
+				float color_closeness = 1.0-color_dist/255.0;
+				float map_closeness = 1.0-distance_formula(make_tuple((*e)->x, (*e)->y), make_tuple(x, y))/(float)DIAG_DIST;
+				float effort = (float)((map_closeness+color_closeness)/4.0);
+				if(((color_dist <= fav_color_tol*255 && effort < easiest_e.first) || matei < REP_CHOICE_START_POP) && distance(ents->begin(), e) != self_entsi){
+					easiest_e = make_pair(effort, e);
 				}
 			}
-		} else if(!reproducing && float_rand()/6 + age/15000 > (positivity+float_rand())/2 && targeti == self_entsi) {
-			cout << id << " pursuing fighting" << endl;
-
+			if(distance(ents->begin(), easiest_e.second) != self_entsi){
+				// cout << id << " found mate" << endl;
+				things_done["chose_mate"]++;
+				matei = distance(ents->begin(), easiest_e.second);
+				reproducing = true;
+				(*easiest_e.second)->reg_as_mate(self_entsi);
+				//cout << id << " started reproduction" << endl;
+			} else {
+				things_done["no_mate_found"]++;
+			}
+		} else if(open_space_level > 0 && open_space_level < 18){
+			// cout << "clostrophobic" << endl;
+			things_done["clost"]++;
+			randmove(0.5, 20-open_space_level/2);
+		} else if(targeti == self_entsi && (float_rand()+age/12000)/2 > (positivity+float_rand())/2) {
 			pair<float, vector<Entity*>::iterator> easiest_e = make_pair(2.0, ents->begin()+self_entsi);
 
-			if(targeti == self_entsi){
-				int color_dist;
-				for(auto e = ents->begin(); e != ents->end(); e++){
-					int color_dist = get_color_dist((*e)->color, lfav_color);
-					float color_closeness = 1.0-color_dist/255.0;
-					float map_closeness = 1.0-distance_formula(make_tuple((*e)->x, (*e)->y), make_tuple(x, y))/(float)DIAG_DIST;
-					float effort = (float)((map_closeness*3.0+color_closeness)/8.0);
-					if(distance(ents->begin(), e) != self_entsi && color_dist <= agro_color_tol*255 && effort < easiest_e.first){
-						easiest_e = make_pair(effort, e);
-					}
+			int color_dist;
+			for(auto e = ents->begin(); e != ents->end(); e++){
+				int color_dist = get_color_dist((*e)->color, lfav_color);
+				float color_closeness = 1.0-color_dist/255.0;
+				float map_closeness = 1.0-distance_formula(make_tuple((*e)->x, (*e)->y), make_tuple(x, y))/(float)DIAG_DIST;
+				float effort = (float)((map_closeness*3.0+color_closeness)/8.0);
+				int index = distance(ents->begin(), e);
+				if(index != self_entsi && index != matei && color_dist <= agro_color_tol*255 && effort < easiest_e.first){
+					easiest_e = make_pair(effort, e);
 				}
-				if(distance(ents->begin(), easiest_e.second) != self_entsi){
-					// cout << "found target" << endl;
-					targeti = distance(ents->begin(), easiest_e.second);
-				}
+			}
+			if(distance(ents->begin(), easiest_e.second) != self_entsi){
+				// cout << "found target" << endl;
+				// cout << "is_mate " << int(is_mate) << endl;
+				things_done["chose_t"]++;
+				targeti = distance(ents->begin(), easiest_e.second);
+			} else {
+				things_done["no_t_found"]++;
 			}
 		}
 		else if(targeti != self_entsi){
@@ -217,8 +220,11 @@ void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
 					if(distance_formula(make_tuple((int)(*target)->x, (int)(*target)->y), make_tuple((int)x, (int)y)) <= 15){
 						(*target)->defect(t);
 						(*target)->sanity -= ((*target)->sanity - (*target)->sanity * (*target)->agetol) * (*target)->psych_sensitivity;
+						things_done["fighting"]++;
+
 					} else {
-						cout << "going to target" << endl;
+						things_done["moving_to_t"]++;
+						// cout << "going to target" << endl;
 						if(move_speed != 6.0) move_speed = 6.0;
 						move(make_tuple((*target)->x, (*target)->y), move_speed);
 					}
@@ -237,25 +243,29 @@ void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
 			}
 		} else if(!moving) {
 			// cout << "randmove" << endl;
+			things_done["new_randmove"]++;
 			randmove();
 		} else {
 			move(newc, move_speed);
+			things_done["moving"]++;
 		}
 	} else {
-	 	if(mdist < DIAG_DIST/4){
-	 		if(reproducing) stop_reproducing();
-			// cout << id << " getting food, food " << food << endl;
-			move(make_tuple(mx, my), 10.0*(1.0-food));
-		}
+ 		if(reproducing) stop_reproducing();
+ 		things_done["getting_food"]++;
+		move(make_tuple(mx, my), 10.0*(1.0-food));
 	}
 
-	if(round(sanity*10)/10 <= 0.75){
-		printf("ent died of unknown causes\n");
+	if(food <= 0){
+		things_done["food_dead"]++;
+		// printf("mouse_food = %f\n", mouse_food);
+		stop_reproducing();
 		klist->push_back(self_entsi);
-	} else if(food <= 0){
-		printf("ent died of hunger\n");
+	} else if(round(sanity*10)/10 <= 0.75){
+		// printf("ent died of unknown causes\n");
+		things_done["sanity_dead"]++;
+		stop_reproducing();
 		klist->push_back(self_entsi);
-	}
+	} 
 }
 void Entity::randmove(float req_factor, float speed){
 	double ra = M_PI*2*float_rand();
@@ -265,7 +275,7 @@ void Entity::randmove(float req_factor, float speed){
 	move(make_tuple(rx, ry), speed);
 }
 void Entity::stop_reproducing(){
-	repc = 0;
+	things_done["abandoned_r"];
 	moving = false;
 	reproducing = false;
 	matei = self_entsi;
@@ -279,6 +289,7 @@ void Entity::add_disease(Disease d){
 }
 void Entity::stop_fighting(){
 	// cout << "stopped fighting" << endl;
+	things_done["abandoned_t"]++;
 	targeti = self_entsi;
 	moving = false;
 	targetc = 0;
@@ -289,14 +300,16 @@ void Entity::update_ents_ptr(vector<Entity*>* e){
 void Entity::update_time(double time){
 	t = time;
 }
-void Entity::reg_as_mate(){
+void Entity::reg_as_mate(int i){
 	is_mate = true;
 	moving = false;
 	reproducing = false;
+	matei = i;
 	matei = self_entsi;
 }
 void Entity::reg_as_not_mate(){
 	is_mate = false;
+	matei = self_entsi;
 }
 void Entity::inc_age(){
 	age += t;
@@ -366,7 +379,6 @@ void Entity::reproduce(Entity* mate, vector<Entity*>* alist){
 				(*enti)->add_disease(mate->disease);
 			}
 		}
-		cout << "clostc " << clostc << endl;
 		if(clostc > MIN_CLOSTC_FOR_DISEASE){
 			if(float_rand() < 0.25*(clostc/MIN_CLOSTC_FOR_DISEASE)){
 				(*enti)->add_disease(make_disease(clostc/(MIN_CLOSTC_FOR_DISEASE*10)));
@@ -433,7 +445,4 @@ Entity::Entity(vector<int> c, vector<int> favc, map<string, float>* opts, vector
 	strength = opts->at("stren");
 	ents = e;
 	t = time;
-}
-Entity::~Entity(){
-	delete choord_r;
 }
