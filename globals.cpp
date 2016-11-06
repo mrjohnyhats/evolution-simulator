@@ -40,9 +40,9 @@ template <typename T>
 long distance_formula(tuple<T, T> p1, tuple<T, T> p2){
 	long dists[4];
 	int x = abs(get<0>(p1) - get<0>(p2));
-	int ox = SCREEN_WIDTH-get<0>(p1) + get<0>(p2);
+	int ox = SCREEN_WIDTH-x;
 	int y = abs(get<1>(p1) - get<1>(p2));
-	int oy = SCREEN_HEIGHT-get<1>(p1) + get<1>(p2);
+	int oy = SCREEN_HEIGHT-y;
 	long dist = 0;
 	int k = 0;
 	for(int i = 0; i < 2; i++){

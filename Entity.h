@@ -43,13 +43,15 @@ class Entity{
 	Disease disease;
 	double food = 1.0;
 	unsigned long clostc;
+	bool dead = false;
 public:
-	bool die_if_old(vector<int>* klist);
+	bool is_dead();
+	bool die_if_old();
 	int get_neighbor_closeness();
-	void update_indices(vector<int>* klist);
+	void update_indices(vector<int> dead_indices);
 	void defect(int i);
 	void move(tuple<int, int> inewc, float speed);
-	void behave(vector<int>* klist, vector<Entity*>* alist);
+	void behave(vector<Entity*>* alist);
 	void reg_as_mate(int i);
 	void reg_as_not_mate();
 	void inc_age();

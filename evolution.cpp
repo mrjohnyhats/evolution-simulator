@@ -26,6 +26,8 @@
 
 using namespace std;
 
+//TODO: fix line drawing algorithm
+
 //Starts up SDL and creates window
 bool init();
 
@@ -103,25 +105,23 @@ vector<int>* klist = new vector<int>;
 vector<Entity*>* alist = new vector<Entity*>;
 Pop_counter* pcounter = new Pop_counter(0);
 
-void k_on_klist(){
-	vector<Entity*>* nents = new vector<Entity*>;
-	vector<int>::iterator klisti;
-	int idist = 0;
-	cout << "klist size " << klist->size() << endl;
-	cout << "ents before size " << ents->size() << endl;
-	for(auto i = ents->begin(); i != ents->end(); i++, idist++){
-		klisti = find(klist->begin(), klist->end(), idist);
-		if(klisti == klist->end()){
-			nents->push_back(*i);
-		} else {
-			klist->erase(klisti);
-			delete (ents->at(idist));
+void k_dead_ents(){
+	vector<int> dead_indices;
+
+	Entity* ent;
+
+	for(int i = 0; i < ents->size(); i++){
+		ent = ents->at(i);
+		if(ent->is_dead()){
+			dead_indices.push_back(i);
+			ents->erase(ents->begin() + i);
 		}
 	}
 
-	ents = nents;
-
-	cout << "ents after size " << ents->size() << endl;
+	for(int i = 0; i < ents->size(); i++){
+		ent = ents->at(i);
+		ent->update_indices(dead_indices);
+	}
 }
 
 void a_on_alist(){
@@ -203,26 +203,24 @@ int main( int argc, char* args[] ){
 				ent = ents->at(i);
 				ent->update_ents_ptr(ents);
 				ent->update_time(t);
-				ent->behave(klist, alist);
+				ent->behave(alist);
 				ent->inc_age();
-				ent->die_if_old(klist);
+				ent->die_if_old();
 				ent->draw(renderer);
-				if(mouse_food < 50){
+				if(mouse_food < 10){
 					mouse_food += 0.01;
 				}
 				i++;
 			}
 			pcounter->draw(renderer);
 			tick++;
-			for(auto entity : *ents){
-				entity->update_indices(klist);
-			}
-			for(auto a = things_done.begin(); a != things_done.end(); a++){
-				cout << a->first << ": " << a->second << endl;
-			}
+			// for(auto a = things_done.begin(); a != things_done.end(); a++){
+			// 	cout << a->first << ": " << a->second << endl;
+			// }
+			// cout << "\n";
 			reset_things_done();
-			a_on_alist();
-			k_on_klist();
+			k_dead_ents();
+			a_on_alist(); 
 			// cout << "mouse_food " << mouse_food << endl;
 			// for(int c = 0; c < 6; c++){
 			// 	cout << c << " " << MPC[c] << endl;
@@ -248,11 +246,11 @@ int main( int argc, char* args[] ){
 		}
 	}
 
-	//Free resources and close SDL
+
 	delete ents;
 	delete klist;
 	delete alist;
-	delete pcounter;
+	delete pcounter;	
 	close();
 
 	return 0;

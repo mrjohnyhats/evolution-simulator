@@ -25,8 +25,8 @@ using namespace std;
 //task persistence
 //energy level (sleep interval)
 
-void Entity::update_indices(vector<int>* klist){
-	for(int i : *klist){
+void Entity::update_indices(vector<int> dead_indices){
+	for(int i : dead_indices){
 		if(self_entsi > i) self_entsi--;
 		if(targeti > i) targeti--;
 		if(matei > i) matei--;
@@ -96,7 +96,7 @@ int Entity::get_neighbor_closeness(){
 	}
 	return DIAG_DIST;
 }
-void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
+void Entity::behave(vector<Entity*>* alist){
 	food -= 1e-3*t/4;
 	int mx, my;
 	SDL_GetMouseState(&mx, &my);
@@ -138,9 +138,10 @@ void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
 
 	if(clostc > 0 && clostc < 18)clostc += (int)(2-open_space_level/10);
 
+
 	if(food > 0.3 || sanity < 0.3 || ents->size() < REP_CHOICE_START_POP){
 		if(reproducing){
-			if(find(klist->begin(), klist->end(), matei) == klist->end() && matei < ents->size()){
+			if(!(matei >= ents->size() || ents->at(matei)->is_dead())){
 				vector<Entity*>::iterator mate = ents->begin() + matei;
 				int color_dist = get_color_dist((*mate)->fav_color, color);
 				if(distance_formula(make_tuple((int)(*mate)->x, (int)(*mate)->y), make_tuple((int)x, (int)y)) <= 30){
@@ -157,7 +158,7 @@ void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
 			} else {
 				stop_reproducing();
 			}
-		} else if(!is_mate && t*((positivity+float_rand())/2 >= ((float_rand() + 1.0 - age/12000)/2) || ents->size()-klist->size() < REP_CHOICE_START_POP)) {
+		} else if(!is_mate && (ents->size() < REP_CHOICE_START_POP || t*((positivity+float_rand())/2 >= ((float_rand() + 1.0 - age/12000)/2)))) {
 			// cout << "pursuing reproduction" << endl;
 
 			pair<float, vector<Entity*>::iterator> easiest_e = make_pair(2.0, ents->begin()+self_entsi);
@@ -168,7 +169,7 @@ void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
 				float color_closeness = 1.0-color_dist/255.0;
 				float map_closeness = 1.0-distance_formula(make_tuple((*e)->x, (*e)->y), make_tuple(x, y))/(float)DIAG_DIST;
 				float effort = (float)((map_closeness+color_closeness)/4.0);
-				if(((color_dist <= fav_color_tol*255 && effort < easiest_e.first) || matei < REP_CHOICE_START_POP) && distance(ents->begin(), e) != self_entsi){
+				if(((color_dist <= fav_color_tol*255 && effort < easiest_e.first) || ents->size() < REP_CHOICE_START_POP) && distance(ents->begin(), e) != self_entsi){
 					easiest_e = make_pair(effort, e);
 				}
 			}
@@ -259,12 +260,12 @@ void Entity::behave(vector<int>* klist, vector<Entity*>* alist){
 		things_done["food_dead"]++;
 		// printf("mouse_food = %f\n", mouse_food);
 		stop_reproducing();
-		klist->push_back(self_entsi);
+		dead = true;
 	} else if(round(sanity*10)/10 <= 0.75){
 		// printf("ent died of unknown causes\n");
 		things_done["sanity_dead"]++;
 		stop_reproducing();
-		klist->push_back(self_entsi);
+		dead = true;
 	} 
 }
 void Entity::randmove(float req_factor, float speed){
@@ -314,12 +315,15 @@ void Entity::reg_as_not_mate(){
 void Entity::inc_age(){
 	age += t;
 }
-bool Entity::die_if_old(vector<int>* klist){
+bool Entity::die_if_old(){
 	if(age > (double)8000*agetol){
-		klist->push_back(self_entsi);
+		dead = true;
 		return true;
 	}
 	return false;
+}
+bool Entity::is_dead(){
+	return dead;
 }
 void Entity::reproduce(Entity* mate, vector<Entity*>* alist){
 	map<string, float> opts;
@@ -414,9 +418,54 @@ void Entity::draw(SDL_Renderer* ren){
 		printf("error drawing rect %s\n", SDL_GetError());
 	}
 
-	if(reproducing && !is_mate && matei != self_entsi){
-		vector<Entity*>::iterator mate = ents->begin() + matei;
-		SDL_RenderDrawLine(ren, (int)x, (int)y, (int)(*mate)->x, (int)(*mate)->y);
+	if(reproducing && !is_mate){
+		Entity* mate = *(ents->begin() + matei);
+		int nx = abs(x - (int)mate->x);
+		int ox = SCREEN_WIDTH-nx;
+		int ny = abs(y - (int)mate->y);
+		int oy = SCREEN_HEIGHT-ny;
+
+		bool xrev = false;
+		bool yrev = false;
+
+		if(ox < nx) xrev = true;
+		if(oy < ny) yrev = true;
+
+		if(xrev || yrev){
+			//a line x, a line y [a = (ent(e), mate(m))]
+			int elx, ely, mlx, mly;
+			if(xrev){
+				if((int)y > (int)mate->y) elx = SCREEN_HEIGHT;
+				else elx = 0;
+				mlx = SCREEN_WIDTH-elx;
+			}
+			if(yrev){
+				if((int)y > (int)mate->y) ely = SCREEN_HEIGHT;
+				else ely = 0;
+				mly = SCREEN_HEIGHT-ely;
+			}
+			if(!xrev){
+				elx = nx*(abs(ely-(int)y)/oy);
+				mlx = nx - elx;
+			}
+			if(!yrev){
+				ely = ny*(abs(elx-(int)x)/ox);
+				mly = ny - ely;
+			}
+
+			SDL_RenderDrawLine(ren, (int)x, (int)y, elx, ely);
+			SDL_RenderDrawLine(ren, (int)mate->x, (int)mate->y, mlx, mly);
+
+			cout << (int)(xrev) << endl;
+			cout << (int)(yrev) << endl;
+			cout << "elx " << elx << endl;
+			cout << "ely " << ely << endl;
+			cout << "mlx " << mlx << endl;
+			cout << "mly " << mly << endl << endl;
+
+		} else {
+			SDL_RenderDrawLine(ren, (int)x, (int)y, (int)mate->x, (int)mate->y);
+		}
 	}
 }
 Entity::Entity(vector<int> c, vector<int> favc, map<string, float>* opts, vector<Entity*>* e, int selfi, int time){
