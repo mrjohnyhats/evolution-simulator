@@ -51,7 +51,7 @@ void Entity::move(tuple<int, int> inewc, float speed){
 	// 	speed *= 4*food;
 	// }
 
-	food -= 1e-3*t*(speed/2.0);
+	food -= 1e-3*t*(speed/2.0)*(1.0-hunger_tol/2);
 
 	int change_type = (float_rand() > 0.5);
 
@@ -97,7 +97,7 @@ int Entity::get_neighbor_closeness(){
 	return DIAG_DIST;
 }
 void Entity::behave(vector<Entity*>* alist){
-	food -= 1e-3*t/4;
+	food -= 1e-3*t/4*(1.0-hunger_tol);
 	int mx, my;
 	SDL_GetMouseState(&mx, &my);
 	int mdist = distance_formula(make_tuple((int)x, (int)y), make_tuple(mx, my));
@@ -106,7 +106,7 @@ void Entity::behave(vector<Entity*>* alist){
 		float sanitydiff = disease.get_sanitydiff(sanity, color, t);
 		float fooddiff = sanitydiff*disease.get_food_effect()/10.0;
 		sanity -= sanitydiff;
-		if(food > 0) food -= fooddiff;
+		if(food > 0) food -= fooddiff*(1.0-hunger_tol/2);
 		if (food < 0) food = 0;
 		disease.change_strength(strength);
 		if(disease.get_strength() < 0.1){
@@ -353,6 +353,7 @@ void Entity::reproduce(Entity* mate, vector<Entity*>* alist){
 			{"mutprob", get_rep_trait(mate->mutation_prob, mutation_prob, mutprob)},
 			{"fert", get_rep_trait(mate->fertility, fertility, mutprob)},
 			{"stren", get_rep_trait(mate->strength/2.0, strength/2.0, mutprob)*2.0},
+			{"htol", get_rep_trait(mate->hunger_tol, hunger_tol, mutprob)},
 			{"x", get_rep_trait(mate->x, x, 0)},
 			{"y", get_rep_trait(mate->y, y, 0)}
 		};
@@ -413,60 +414,61 @@ void Entity::draw(SDL_Renderer* ren){
 	if(SDL_RenderFillRect(ren, choord_r) != 0){
 		printf("error drawing filled rect %s\n", SDL_GetError());
 	}
-	SDL_SetRenderDrawColor(ren, 255-color.at(0), 255-color.at(1), 255-color.at(2), 255);
-	if(SDL_RenderDrawRect(ren, choord_r) != 0){
-		printf("error drawing rect %s\n", SDL_GetError());
-	}
 
-	if(reproducing && !is_mate){
-		Entity* mate = *(ents->begin() + matei);
-		int nx = abs(x - (int)mate->x);
-		int ox = SCREEN_WIDTH-nx;
-		int ny = abs(y - (int)mate->y);
-		int oy = SCREEN_HEIGHT-ny;
+	// if(reproducing && !is_mate){
+	// 	Entity* mate = *(ents->begin() + matei);
+	// 	int nx = abs(x - (int)mate->x);
+	// 	int ox = SCREEN_WIDTH-nx;
+	// 	int ny = abs(y - (int)mate->y);
+	// 	int oy = SCREEN_HEIGHT-ny;
 
-		bool xrev = false;
-		bool yrev = false;
+	// 	bool xrev = false;
+	// 	bool yrev = false;
 
-		if(ox < nx) xrev = true;
-		if(oy < ny) yrev = true;
+	// 	if(ox < nx) xrev = true;
+	// 	if(oy < ny) yrev = true;
 
-		if(xrev || yrev){
-			//a line x, a line y [a = (ent(e), mate(m))]
-			int elx, ely, mlx, mly;
-			if(xrev){
-				if((int)y > (int)mate->y) elx = SCREEN_HEIGHT;
-				else elx = 0;
-				mlx = SCREEN_WIDTH-elx;
-			}
-			if(yrev){
-				if((int)y > (int)mate->y) ely = SCREEN_HEIGHT;
-				else ely = 0;
-				mly = SCREEN_HEIGHT-ely;
-			}
-			if(!xrev){
-				elx = nx*(abs(ely-(int)y)/oy);
-				mlx = nx - elx;
-			}
-			if(!yrev){
-				ely = ny*(abs(elx-(int)x)/ox);
-				mly = ny - ely;
-			}
+	// 	if(xrev || yrev){
+	// 		//a line x, a line y [a = (ent(e), mate(m))]
+	// 		int elx, ely, mlx, mly;
+	// 		if(xrev){
+	// 			if((int)y > (int)mate->y) elx = SCREEN_HEIGHT;
+	// 			else elx = 0;
+	// 			mlx = SCREEN_WIDTH-elx;
+	// 		}
+	// 		if(yrev){
+	// 			if((int)y > (int)mate->y) ely = SCREEN_HEIGHT;
+	// 			else ely = 0;
+	// 			mly = SCREEN_HEIGHT-ely;
+	// 		}
+	// 		if(!xrev){
+	// 			elx = nx*(abs(ely-(int)y)/oy);
+	// 			mlx = nx - elx;
+	// 		}
+	// 		if(!yrev){
+	// 			ely = ny*(abs(elx-(int)x)/ox);
+	// 			mly = ny - ely;
+	// 		}
 
-			SDL_RenderDrawLine(ren, (int)x, (int)y, elx, ely);
-			SDL_RenderDrawLine(ren, (int)mate->x, (int)mate->y, mlx, mly);
+	// 		SDL_RenderDrawLine(ren, (int)x, (int)y, elx, ely);
+	// 		SDL_RenderDrawLine(ren, (int)mate->x, (int)mate->y, mlx, mly);
 
-			cout << (int)(xrev) << endl;
-			cout << (int)(yrev) << endl;
-			cout << "elx " << elx << endl;
-			cout << "ely " << ely << endl;
-			cout << "mlx " << mlx << endl;
-			cout << "mly " << mly << endl << endl;
+	// 		cout << (int)(xrev) << endl;
+	// 		cout << (int)(yrev) << endl;
+	// 		cout << "elx " << elx << endl;
+	// 		cout << "ely " << ely << endl;
+	// 		cout << "mlx " << mlx << endl;
+	// 		cout << "mly " << mly << endl << endl;
 
-		} else {
-			SDL_RenderDrawLine(ren, (int)x, (int)y, (int)mate->x, (int)mate->y);
-		}
-	}
+	// 	} else {
+	// 		SDL_RenderDrawLine(ren, (int)x, (int)y, (int)mate->x, (int)mate->y);
+	// 	}
+	// }
+	//
+	// SDL_SetRenderDrawColor(ren, 255-color.at(0), 255-color.at(1), 255-color.at(2), 255);
+	// if(SDL_RenderDrawRect(ren, choord_r) != 0){
+	// 	printf("error drawing rect %s\n", SDL_GetError());
+	// }
 }
 Entity::Entity(vector<int> c, vector<int> favc, map<string, float>* opts, vector<Entity*>* e, int selfi, int time){
 	id = rand_str(15);
@@ -492,6 +494,7 @@ Entity::Entity(vector<int> c, vector<int> favc, map<string, float>* opts, vector
 	mutation_prob = (*opts).at("mutprob");
 	fertility = opts->at("fert");
 	strength = opts->at("stren");
+	hunger_tol = opts->at("htol");
 	ents = e;
 	t = time;
 }

@@ -44,6 +44,7 @@ class Entity{
 	double food = 1.0;
 	unsigned long clostc;
 	bool dead = false;
+	float hunger_tol;
 public:
 	bool is_dead();
 	bool die_if_old();

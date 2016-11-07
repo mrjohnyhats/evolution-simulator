@@ -16,7 +16,7 @@
 using namespace std;
 
 bool r_seeded = false;
-float mouse_food = 10.0;
+float mouse_food = MAX_MOUSE_FOOD;
 map<string, int> things_done;
 
 template <typename T>

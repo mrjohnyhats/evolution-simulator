@@ -143,6 +143,7 @@ vector<Entity*>* make_ents(){
 			{"mutprob", float_rand()},
 			{"fert", float_rand()},
 			{"stren", float_rand()*2},
+			{"htol", float_rand()*0.5 + pow(0.01,float_rand())*0.5},
 			{"x", float_rand()*SCREEN_WIDTH},
 			{"y", float_rand()*SCREEN_HEIGHT}
 		};
@@ -207,7 +208,7 @@ int main( int argc, char* args[] ){
 				ent->inc_age();
 				ent->die_if_old();
 				ent->draw(renderer);
-				if(mouse_food < 10){
+				if(mouse_food < MAX_MOUSE_FOOD){
 					mouse_food += 0.01;
 				}
 				i++;
