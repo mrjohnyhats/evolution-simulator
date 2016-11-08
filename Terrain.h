@@ -7,10 +7,13 @@
 using namespace std;
 
 class Terrain {
-	tuple<int, int> tmap[SCREEN_WIDTH/10][SCREEN_HEIGHT/10];
+	tuple<float, float> tmap[SCREEN_WIDTH/10][SCREEN_HEIGHT/10];
+	int m_quan, min_m_dist, m_radius;
+	float m_height;
 public:
 	float elvt_at_p(int x, int y);
-	void ren_rand_pts();
-	Terrain(map<string, float> opts);
+	void gen_rand();
+	void make_mountain(int radius, float height, int x, int y);
+	Terrain();
 }
 #endif
