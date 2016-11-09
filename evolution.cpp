@@ -22,6 +22,7 @@
 #include "Entity.h"
 #include "Disease.h"
 #include "Pop_counter.h"
+#include "Terrain.h"
 // extern float mouse_food;
 
 using namespace std;
@@ -192,6 +193,9 @@ int main( int argc, char* args[] ){
 		double t = 0;
 		chrono::high_resolution_clock::time_point lastt;
 		int tick = 0;
+		Terrain terrain;
+		terrain.gen_rand();
+		terrain.log();
 
 		while(!quit) {
 			lastt = chrono::high_resolution_clock::now();
