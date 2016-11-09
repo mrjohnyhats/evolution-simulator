@@ -1,4 +1,4 @@
-OBJS = evolution.cpp globals.cpp Entity.cpp Disease.cpp Pop_counter.cpp
+OBJS = evolution.cpp globals.cpp Entity.cpp Disease.cpp Pop_counter.cpp Terrain.cpp
 
 OBJ_NAME = evolution
 

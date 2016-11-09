@@ -13,7 +13,8 @@ class Terrain {
 public:
 	float elvt_at_p(int x, int y);
 	void gen_rand();
+	void log();
 	void make_mountain(int radius, float height, int x, int y);
 	Terrain();
-}
+};
 #endif
