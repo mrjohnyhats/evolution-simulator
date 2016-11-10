@@ -7,6 +7,7 @@
 #include <map>
 
 #include "Disease.h"
+#include "Terrain.h"
 
 class Entity{
 	vector<Entity*>* ents;
@@ -45,6 +46,7 @@ class Entity{
 	unsigned long clostc;
 	bool dead = false;
 	float hunger_tol;
+	Terrain* terrain;
 public:
 	bool is_dead();
 	bool die_if_old();
@@ -66,6 +68,6 @@ public:
 	void update_time(double time);
 	void add_disease(Disease d);
 	void kill();
-	Entity(vector<int> c, vector<int> favc, map<string, float>* opts, vector<Entity*>* e, int selfi, int time);
+	Entity(vector<int> c, vector<int> favc, map<string, float>* opts, vector<Entity*>* e, int selfi, Terrain* ter);
 };
 #endif

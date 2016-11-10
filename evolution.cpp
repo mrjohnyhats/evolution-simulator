@@ -105,6 +105,7 @@ vector<Entity*>* ents = new vector<Entity*>;
 vector<int>* klist = new vector<int>;
 vector<Entity*>* alist = new vector<Entity*>;
 Pop_counter* pcounter = new Pop_counter(0);
+Terrain* terrain = new Terrain();
 
 void k_dead_ents(){
 	vector<int> dead_indices;
@@ -151,7 +152,7 @@ vector<Entity*>* make_ents(){
 		vector<int> color {(int)(float_rand()*255), (int)(float_rand()*255), (int)(float_rand()*255)};
 		vector<int> favc = {(int)(float_rand()*255), (int)(float_rand()*255), (int)(float_rand()*255)};
 
-		ents->push_back(new Entity(color, favc, &opts, ents, ents->size(), 0));
+		ents->push_back(new Entity(color, favc, &opts, ents, ents->size(), terrain));
 		if(float_rand() < 0.1){
 			(*(ents->end()-1))->add_disease(make_disease());
 		}
@@ -184,6 +185,7 @@ int main( int argc, char* args[] ){
 		close();
 	}
 	else{
+		terrain->gen_rand();
 		ents = make_ents();
 		reset_things_done();
 		bool quit = false;
@@ -193,9 +195,6 @@ int main( int argc, char* args[] ){
 		double t = 0;
 		chrono::high_resolution_clock::time_point lastt;
 		int tick = 0;
-		Terrain terrain;
-		terrain.gen_rand();
-		terrain.log();
 
 		while(!quit) {
 			lastt = chrono::high_resolution_clock::now();
@@ -204,6 +203,7 @@ int main( int argc, char* args[] ){
 			int i = 0;
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 			SDL_RenderClear(renderer);
+			terrain->draw(renderer);
 			while(i < ents->size()){
 				ent = ents->at(i);
 				ent->update_ents_ptr(ents);

@@ -11,6 +11,8 @@
 
 #include "globals.h"
 #include "Entity.h"
+#include "Terrain.h"
+#include "Disease.h"
 // extern float mouse_food;
 
 using namespace std;
@@ -45,11 +47,7 @@ void Entity::move(tuple<int, int> inewc, float speed){
 	newc = inewc;
 	move_speed = speed;
 
-	// cout << "speed " << speed << endl;
-
-	// if(food > 0.4){
-	// 	speed *= 4*food;
-	// }
+	speed += speed * -1*terrain->next_elvt_at_p((int)x, (int)y) + 5;
 
 	food -= 1e-3*t*(speed/2.0)*(1.0-hunger_tol/2);
 
@@ -370,9 +368,11 @@ void Entity::reproduce(Entity* mate, vector<Entity*>* alist){
 			favc.push_back((int)(get_rep_trait(val, mval, mutprob)*255.0));
 		}
 
-		alist->push_back(new Entity(c, favc, &opts, ents, ents->size()+alist->size(), t));
+		alist->push_back(new Entity(c, favc, &opts, ents, ents->size()+alist->size(), terrain));
 
 		enti = alist->end()-1;
+
+		(*enti)->update_time(t);
 
 		if(has_disease){
 			if(float_rand()*2 > disease.get_mobility()){
@@ -470,7 +470,7 @@ void Entity::draw(SDL_Renderer* ren){
 	// 	printf("error drawing rect %s\n", SDL_GetError());
 	// }
 }
-Entity::Entity(vector<int> c, vector<int> favc, map<string, float>* opts, vector<Entity*>* e, int selfi, int time){
+Entity::Entity(vector<int> c, vector<int> favc, map<string, float>* opts, vector<Entity*>* e, int selfi, Terrain* ter){
 	id = rand_str(15);
 	color = c;
 	positivity = (*opts).at("pos");
@@ -496,5 +496,6 @@ Entity::Entity(vector<int> c, vector<int> favc, map<string, float>* opts, vector
 	strength = opts->at("stren");
 	hunger_tol = opts->at("htol");
 	ents = e;
-	t = time;
+	t = 0;
+	terrain = ter;
 }
