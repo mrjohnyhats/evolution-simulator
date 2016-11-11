@@ -12,8 +12,10 @@ double Terrain::next_elvt_at_p(double x, double y){
 	int progx = fmod(x/10.0, 1.0);
 	int progy = fmod(y/10.0, 1.0);
 	double prog = sqrt(pow(progx, 2) + pow(progy, 2));
-	int xi = abs((int)(x/10) % SCREEN_WIDTH/10);
-	int yi = abs((int)(y/10) % SCREEN_HEIGHT/10);
+	int xi = (int)(x/10) % SCREEN_WIDTH/10;
+	int yi = (int)(y/10) % SCREEN_HEIGHT/10;
+	if(xi < 0) xi = SCREEN_WIDTH/10 + ceil(xi);
+	if(yi < 0) yi = SCREEN_HEIGHT/10 + ceil(yi);
 	//get dist between px and py
 	tuple<int, int> p = tmap[xi][yi];
 	double diff = get<1>(p) - get<0>(p);
@@ -53,7 +55,6 @@ void Terrain::gen_rand(){
 		make_mountain(radius, height, x, y);
 		m_to_make--;
 	}
-
 }
 
 void Terrain::log(){
