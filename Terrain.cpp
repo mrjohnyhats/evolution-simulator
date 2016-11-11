@@ -12,8 +12,8 @@ double Terrain::next_elvt_at_p(double x, double y){
 	int progx = fmod(x/10.0, 1.0);
 	int progy = fmod(y/10.0, 1.0);
 	double prog = sqrt(pow(progx, 2) + pow(progy, 2));
-	int xi = (int)(x/10) % SCREEN_WIDTH/10;
-	int yi = (int)(y/10) % SCREEN_HEIGHT/10;
+	int xi = abs((int)(x/10) % SCREEN_WIDTH/10);
+	int yi = abs((int)(y/10) % SCREEN_HEIGHT/10);
 	//get dist between px and py
 	tuple<int, int> p = tmap[xi][yi];
 	double diff = get<1>(p) - get<0>(p);
@@ -46,7 +46,7 @@ void Terrain::gen_rand(){
 	bool broken = false;
 
 	while(m_to_make > 0){
-		radius = 20 + (int)round(float_rand()*30);
+		radius = 20 + (int)round(float_rand()*20);
 		height = 0.25 + float_rand()*0.75;
 		x = float_rand()*SCREEN_WIDTH/10-1;
 		y = float_rand()*SCREEN_HEIGHT/10-1;
@@ -101,7 +101,12 @@ void Terrain::make_mountain(int radius, float height, int x, int y){
 			cx %= SCREEN_WIDTH/10;
 			cy %= SCREEN_WIDTH/10;
 
-			tmap[cx][cy] = make_tuple(lh, hh);
+			if(tmap[cx][cy] == make_tuple((double)0.0, (double)0.0)){
+				tmap[cx][cy] = make_tuple(lh, hh);
+			} else {
+				tuple<double, double> op = tmap[cx][cy];
+				tmap[cx][cy] = make_tuple((get<0>(op) + lh)/2, (get<1>(op) + hh)/2);
+			}
 		}
 	}
 

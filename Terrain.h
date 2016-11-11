@@ -8,7 +8,7 @@
 using namespace std;
 
 class Terrain {
-	tuple<double, double> tmap[SCREEN_WIDTH/10][SCREEN_HEIGHT/10];
+	tuple<double, double> tmap[SCREEN_WIDTH/10][SCREEN_HEIGHT/10] = {{make_tuple(0,0)}};
 	int m_quan, min_m_dist, m_radius;
 	float m_height;
 public:

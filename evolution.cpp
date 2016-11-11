@@ -260,6 +260,7 @@ int main( int argc, char* args[] ){
 	delete alist;
 	delete pcounter;
 	delete terrain;
+	//delete terrain;
 	close();
 
 	return 0;
