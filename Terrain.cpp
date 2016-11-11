@@ -8,7 +8,7 @@
 #include "Terrain.h"
 using namespace std;
 
-double Terrain::next_elvt_at_p(int x, int y){
+double Terrain::next_elvt_at_p(double x, double y){
 	int progx = fmod(x/10.0, 1.0);
 	int progy = fmod(y/10.0, 1.0);
 	double prog = sqrt(pow(progx, 2) + pow(progy, 2));
@@ -38,21 +38,20 @@ void Terrain::draw(SDL_Renderer* ren){
 }
 
 void Terrain::gen_rand(){
-	int m_made = 0;
-	int m_to_make = 2 + (int)round(float_rand()*6);
-	int m_area = 0;
-	int radius;
+	int m_to_make = 15 + (int)round(float_rand()*30);
+	int radius, msect, x, y;
 	float height;
-	for(int x = 0; x < SCREEN_WIDTH/10; x++){
-		for(int y = 0; y < SCREEN_HEIGHT/10; y++){		
-			if(float_rand() < 1.0/(float)(SCREEN_WIDTH/10-m_area)/(float)(SCREEN_HEIGHT/10-m_area)*m_to_make*3){
-				radius = 4 + (int)ceil(float_rand()*6);
-				height = 0.25 + float_rand()*0.75;
-				make_mountain(radius, height, x, y);
-				m_area += 2*radius;
-			}
-		}
+	bool broken = false;
+
+	while(m_to_make > 0){
+		radius = 10 + (int)round(float_rand()*10);
+		height = 0.25 + float_rand()*0.75;
+		x = float_rand()*SCREEN_WIDTH/10-1;
+		y = float_rand()*SCREEN_HEIGHT/10-1;
+		make_mountain(radius, height, x, y);
+		m_to_make--;
 	}
+
 }
 
 void Terrain::log(){
@@ -72,31 +71,22 @@ void Terrain::make_mountain(int radius, float height, int x, int y){
 	double lh, hh;
 	int max_qs;
 	int cx, cy;
-	cout << "MAKING MOUNTAIN" << endl;
-	cout << "radius " << radius << endl;
-	cout << "x " << x << " y " << y << endl;
 	for(int rs = 0; rs <= radius; rs++){
 		max_qs = rs*M_PI*2;
 		for(int qs = 1; qs <= max_qs; qs++){
 			rad = 2.0*M_PI*((1.0/(double)max_qs)*(double)qs);
 
-			cout << sin(rad) << " " << cos(rad) << endl;
+			cx = abs(x + (int)round(sin(rad)*rs)) % (SCREEN_WIDTH/10);
+			cy = abs(y + (int)round(cos(rad)*rs)) % (SCREEN_HEIGHT/10);
 
-			cx = abs(x + (int)round(sin(rad)*(double)rs)) % SCREEN_WIDTH/10;
-			cy = abs(y + (int)round(cos(rad)*(double)rs)) % SCREEN_HEIGHT/10;
-
-			// if(rs == radius){
-			// 	x += float_rand()*2 - 1;
-			// 	y += float_rand()*2 - 1;
-			// }
-
-			cout << cx << " " << cy << endl;
+			if(rs == radius){
+				cx += ((cx < SCREEN_WIDTH/10) ? (int)round(float_rand()*2-1) : (int)round(float_rand()*-1));
+				cy += ((cy < SCREEN_HEIGHT/10) ? (int)round(float_rand()*2-1) : (int)round(float_rand()*-1));
+			}
 
 			if(rs > 0){
-				// lh = (double)height/(double)rs;
-				// hh = (double)height*(1.0+float_rand())/(double)rs;
-				lh = 1;
-				hh = 1;
+				lh = (double)height/(double)rs;
+				hh = (double)height*(1.0+float_rand())/(double)rs;
 			} else {
 				lh = 1;
 				hh = 1;

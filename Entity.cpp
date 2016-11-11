@@ -47,7 +47,7 @@ void Entity::move(tuple<int, int> inewc, float speed){
 	newc = inewc;
 	move_speed = speed;
 
-	speed += speed * -1*terrain->next_elvt_at_p((int)x, (int)y) + 5;
+	speed += speed * cur_elvt-terrain->next_elvt_at_p(x, y);
 
 	food -= 1e-3*t*(speed/2.0)*(1.0-hunger_tol/2);
 
@@ -75,6 +75,8 @@ void Entity::move(tuple<int, int> inewc, float speed){
 		y += inc*ymul;
 		moving = true;
 	}
+
+	cur_elvt = terrain->next_elvt_at_p(x, y);
 }
 int Entity::get_neighbor_closeness(){
 	int distq = 0;
@@ -498,4 +500,5 @@ Entity::Entity(vector<int> c, vector<int> favc, map<string, float>* opts, vector
 	ents = e;
 	t = 0;
 	terrain = ter;
+	cur_elvt = terrain->next_elvt_at_p(x, y);
 }

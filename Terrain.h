@@ -12,7 +12,7 @@ class Terrain {
 	int m_quan, min_m_dist, m_radius;
 	float m_height;
 public:
-	double next_elvt_at_p(int x, int y);
+	double next_elvt_at_p(double x, double y);
 	void gen_rand();
 	void log();
 	void draw(SDL_Renderer* ren);

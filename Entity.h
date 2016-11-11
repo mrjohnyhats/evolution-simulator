@@ -47,6 +47,7 @@ class Entity{
 	bool dead = false;
 	float hunger_tol;
 	Terrain* terrain;
+	double cur_elvt;
 public:
 	bool is_dead();
 	bool die_if_old();
