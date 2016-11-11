@@ -93,7 +93,7 @@ bool init()
 void close(){
 	//Destroy window
 	SDL_DestroyRenderer(renderer);
-	SDL_DestroyWindow( gWindow );
+	SDL_DestroyWindow(gWindow);
 	gWindow = NULL;
 
 	//Quit SDL subsystems
@@ -143,7 +143,7 @@ vector<Entity*>* make_ents(){
 			{"psysense", float_rand()*0.95 + 0.05},
 			{"atol", float_rand()},
 			{"mutprob", float_rand()},
-			{"fert", float_rand()},
+			{"fert", 0.5 + float_rand()/2},
 			{"stren", float_rand()*2},
 			{"htol", float_rand()*0.5 + pow(0.01,float_rand())*0.5},
 			{"x", float_rand()*SCREEN_WIDTH},
@@ -152,7 +152,7 @@ vector<Entity*>* make_ents(){
 		vector<int> color {(int)(float_rand()*255), (int)(float_rand()*255), (int)(float_rand()*255)};
 		vector<int> favc = {(int)(float_rand()*255), (int)(float_rand()*255), (int)(float_rand()*255)};
 
-		ents->push_back(new Entity(color, favc, &opts, ents, ents->size(), terrain));
+		ents->push_back(new Entity(color, favc, &opts, ents->size(), terrain));
 		if(float_rand() < 0.1){
 			(*(ents->end()-1))->add_disease(make_disease());
 		}
@@ -187,7 +187,7 @@ int main( int argc, char* args[] ){
 	else{
 		terrain->gen_rand();
 		ents = make_ents();
-		reset_things_done();
+		// reset_things_done();
 		bool quit = false;
 
 		SDL_Event e;
@@ -198,7 +198,7 @@ int main( int argc, char* args[] ){
 
 		while(!quit) {
 			lastt = chrono::high_resolution_clock::now();
-				pcounter->update(ents->size());
+			pcounter->update(ents->size());
 			Entity* ent;
 			int i = 0;
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -223,7 +223,7 @@ int main( int argc, char* args[] ){
 			// 	cout << a->first << ": " << a->second << endl;
 			// }
 			// cout << "\n";
-			reset_things_done();
+			// reset_things_done();
 			k_dead_ents();
 			a_on_alist(); 
 			// cout << "mouse_food " << mouse_food << endl;
@@ -252,10 +252,14 @@ int main( int argc, char* args[] ){
 	}
 
 
+	for(auto e = ents->begin(); e != ents->end(); e++){
+		delete (*e);
+	}
 	delete ents;
 	delete klist;
 	delete alist;
-	delete pcounter;	
+	delete pcounter;
+	delete terrain;
 	close();
 
 	return 0;

@@ -69,6 +69,6 @@ public:
 	void update_time(double time);
 	void add_disease(Disease d);
 	void kill();
-	Entity(vector<int> c, vector<int> favc, map<string, float>* opts, vector<Entity*>* e, int selfi, Terrain* ter);
+	Entity(vector<int> c, vector<int> favc, map<string, float>* opts, int selfi, Terrain* ter);
 };
 #endif

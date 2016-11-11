@@ -370,7 +370,7 @@ void Entity::reproduce(Entity* mate, vector<Entity*>* alist){
 			favc.push_back((int)(get_rep_trait(val, mval, mutprob)*255.0));
 		}
 
-		alist->push_back(new Entity(c, favc, &opts, ents, ents->size()+alist->size(), terrain));
+		alist->push_back(new Entity(c, favc, &opts, ents->size()+alist->size(), terrain));
 
 		enti = alist->end()-1;
 
@@ -472,7 +472,7 @@ void Entity::draw(SDL_Renderer* ren){
 	// 	printf("error drawing rect %s\n", SDL_GetError());
 	// }
 }
-Entity::Entity(vector<int> c, vector<int> favc, map<string, float>* opts, vector<Entity*>* e, int selfi, Terrain* ter){
+Entity::Entity(vector<int> c, vector<int> favc, map<string, float>* opts, int selfi, Terrain* ter){
 	id = rand_str(15);
 	color = c;
 	positivity = (*opts).at("pos");
@@ -497,7 +497,6 @@ Entity::Entity(vector<int> c, vector<int> favc, map<string, float>* opts, vector
 	fertility = opts->at("fert");
 	strength = opts->at("stren");
 	hunger_tol = opts->at("htol");
-	ents = e;
 	t = 0;
 	terrain = ter;
 	cur_elvt = terrain->next_elvt_at_p(x, y);

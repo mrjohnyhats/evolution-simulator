@@ -12,8 +12,10 @@ double Terrain::next_elvt_at_p(double x, double y){
 	int progx = fmod(x/10.0, 1.0);
 	int progy = fmod(y/10.0, 1.0);
 	double prog = sqrt(pow(progx, 2) + pow(progy, 2));
+	int xi = (int)(x/10) % SCREEN_WIDTH/10;
+	int yi = (int)(y/10) % SCREEN_HEIGHT/10;
 	//get dist between px and py
-	tuple<int, int> p = tmap[(int)x/10][(int)y/10];
+	tuple<int, int> p = tmap[xi][yi];
 	double diff = get<1>(p) - get<0>(p);
 	return get<0>(p) + diff*prog;
 }
@@ -38,13 +40,13 @@ void Terrain::draw(SDL_Renderer* ren){
 }
 
 void Terrain::gen_rand(){
-	int m_to_make = 15 + (int)round(float_rand()*30);
+	int m_to_make = 5 + (int)round(float_rand()*10);
 	int radius, msect, x, y;
 	float height;
 	bool broken = false;
 
 	while(m_to_make > 0){
-		radius = 10 + (int)round(float_rand()*10);
+		radius = 20 + (int)round(float_rand()*30);
 		height = 0.25 + float_rand()*0.75;
 		x = float_rand()*SCREEN_WIDTH/10-1;
 		y = float_rand()*SCREEN_HEIGHT/10-1;
@@ -74,23 +76,31 @@ void Terrain::make_mountain(int radius, float height, int x, int y){
 	for(int rs = 0; rs <= radius; rs++){
 		max_qs = rs*M_PI*2;
 		for(int qs = 1; qs <= max_qs; qs++){
-			rad = 2.0*M_PI*((1.0/(double)max_qs)*(double)qs);
+			if(rs > 0){
+				rad = 2.0*M_PI*((1.0/(double)max_qs)*(double)qs);
 
-			cx = abs(x + (int)round(sin(rad)*rs)) % (SCREEN_WIDTH/10);
-			cy = abs(y + (int)round(cos(rad)*rs)) % (SCREEN_HEIGHT/10);
+				cx = x + (int)round(sin(rad)*rs);
+				cy = y + (int)round(cos(rad)*rs);
+				lh = (double)height/(log2(rs));
+				hh = (double)height*(1.0+float_rand())/(log2(rs));
+			} else {
+				cx = x;
+				cy = y;
+				lh = height;
+				hh = height;
+			}
 
 			if(rs == radius){
-				cx += ((cx < SCREEN_WIDTH/10) ? (int)round(float_rand()*2-1) : (int)round(float_rand()*-1));
-				cy += ((cy < SCREEN_HEIGHT/10) ? (int)round(float_rand()*2-1) : (int)round(float_rand()*-1));
+				cx += (int)round(float_rand()*2.0-1.0);
+				cy += (int)round(float_rand()*2.0-1.0);
 			}
 
-			if(rs > 0){
-				lh = (double)height/(double)rs;
-				hh = (double)height*(1.0+float_rand())/(double)rs;
-			} else {
-				lh = 1;
-				hh = 1;
-			}
+			if(cx < 0) cx = SCREEN_WIDTH/10 + cx;
+			if(cy < 0) cy = SCREEN_HEIGHT/10 + cy;
+
+			cx %= SCREEN_WIDTH/10;
+			cy %= SCREEN_WIDTH/10;
+
 			tmap[cx][cy] = make_tuple(lh, hh);
 		}
 	}
